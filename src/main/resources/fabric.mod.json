@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "mmoecon",
+	"version": "${version}",
+	"name": "MMO Econ",
+	"description": "A server-side player economy & GUI shop mod. Manages persistent balances, a customisable chest-GUI shop, player-to-player payments, sell wands, a balance leaderboard and playtime rewards. Completely server-side — no client install required.",
+	"authors": [
+		"Casp3rNZ"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/mmo-econ",
+		"sources": "https://github.com/Casp3rNZ/MMOEcon-NeoForge",
+		"issues": "https://github.com/Casp3rNZ/MMOEcon-NeoForge/issues"
+	},
+	"license": "GPL-3.0-or-later",
+	"icon": "assets/mmoecon/icon.png",
+	"environment": "server",
+	"entrypoints": {
+		"main": [
+			"com.casp3rnz.mmoecon.MMOEcon"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
