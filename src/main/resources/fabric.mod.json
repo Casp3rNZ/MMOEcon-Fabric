@@ -14,7 +14,7 @@
 	},
 	"license": "GPL-3.0-or-later",
 	"icon": "assets/mmoecon/icon.png",
-	"environment": "server",
+	"environment": "*",
 	"entrypoints": {
 		"main": [
 			"com.casp3rnz.mmoecon.MMOEcon"
