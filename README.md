@@ -1,5 +1,5 @@
 ## MMO Econ 
-#### A server-side Player Economy & GUI Shop mod!
+#### An Economy & GUI Shop mod!
 
 ### Download
 [![Static Badge](https://img.shields.io/badge/GitHub%20Release-Latest-blue?style=for-the-badge&logo=github&logoSize=auto)](https://github.com/Casp3rNZ/MMOEcon-NeoForge/releases/latest)
