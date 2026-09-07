@@ -1,5 +1,5 @@
 ## MMO Econ 
-#### A server-side Player Economy & GUI Shop mod!
+#### An Economy & GUI Shop mod!
 
 ### Download
 [![Static Badge](https://img.shields.io/badge/GitHub%20Release-Latest-blue?style=for-the-badge&logo=github&logoSize=auto)](https://github.com/Casp3rNZ/MMOEcon-NeoForge/releases/latest)
@@ -33,7 +33,7 @@ It is completely server-side and does NOT need to be installed on any clients in
 - /shop reload - Reloads MMOShop.json
 
 ### Customising the Shop
-The admin GUI shop is dynamically populated by /config/mmoecon/MMOShop.json.
+The GUI shop is dynamically populated by /config/mmoecon/MMOShop.json.
 If you don't want to write a shop JSON file from scratch, an example one will be generated the first time the mod runs to get you started.
 
 #### Example MMOShop.JSON Structure
