@@ -47,6 +47,11 @@ public final class Config {
     public static final Value<Boolean> ENABLE_GUI_SHOP          = new Value<>(true);
     public static final Value<Integer> MAX_TRANSACTION_QUANTITY = new Value<>(2304);
 
+    // auction house
+    public static final Value<Boolean> ENABLE_AUCTION_HOUSE     = new Value<>(true);
+    public static final Value<Integer> MAX_AUCTION_QUANTITY     = new Value<>(10);
+    public static final Value<Integer> MAX_AUCTION_LISTING_SIZE = new Value<>(2304);
+
     private static final Path CONFIG_PATH = ModPaths.config("config.json");
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -72,6 +77,7 @@ public final class Config {
 
             JsonObject economy = root.has("economy") ? root.getAsJsonObject("economy") : new JsonObject();
             JsonObject shop     = root.has("shop")     ? root.getAsJsonObject("shop")     : new JsonObject();
+            JsonObject auction  = root.has("auction house") ? root.getAsJsonObject("auction house") : new JsonObject();
 
             ENABLE_PLAYTIME_REWARDS.set(getBool(economy, "enablePlaytimeRewards", ENABLE_PLAYTIME_REWARDS.get()));
             PLAYTIME_REWARD.set(getDouble(economy, "playtimeReward", PLAYTIME_REWARD.get(), 0.0, Double.MAX_VALUE));
@@ -80,6 +86,10 @@ public final class Config {
 
             ENABLE_GUI_SHOP.set(getBool(shop, "enableGUIShop", ENABLE_GUI_SHOP.get()));
             MAX_TRANSACTION_QUANTITY.set(getInt(shop, "maxTransactionQuantity", MAX_TRANSACTION_QUANTITY.get(), 1, Integer.MAX_VALUE));
+
+            ENABLE_AUCTION_HOUSE.set(getBool(auction, "enableAuctionHouse", ENABLE_AUCTION_HOUSE.get()));
+            MAX_AUCTION_QUANTITY.set(getInt(auction, "maxAuctionQuantity", MAX_AUCTION_QUANTITY.get(), 1, Integer.MAX_VALUE));
+            MAX_AUCTION_LISTING_SIZE.set(getInt(auction, "maxAuctionListingSize", MAX_AUCTION_LISTING_SIZE.get(), 1, Integer.MAX_VALUE));
 
             MMOEcon.LOGGER.info("Loaded config from {}.", CONFIG_PATH);
         } catch (IOException | RuntimeException e) {
@@ -100,9 +110,15 @@ public final class Config {
         shop.addProperty("enableGUIShop", ENABLE_GUI_SHOP.get());
         shop.addProperty("maxTransactionQuantity", MAX_TRANSACTION_QUANTITY.get());
 
+        JsonObject auction = new JsonObject();
+        auction.addProperty("enableAuctionHouse", ENABLE_AUCTION_HOUSE.get());
+        auction.addProperty("maxAuctionQuantity", MAX_AUCTION_QUANTITY.get());
+        auction.addProperty("maxAuctionListingSize", MAX_AUCTION_LISTING_SIZE.get());
+
         JsonObject root = new JsonObject();
         root.add("economy", economy);
         root.add("shop", shop);
+        root.add("auction house", auction);
 
         try {
             Files.createDirectories(CONFIG_PATH.getParent());

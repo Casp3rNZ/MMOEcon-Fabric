@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
@@ -15,6 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
 
@@ -45,15 +47,21 @@ public final class EconomyCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         // /bal and /money
-        dispatcher.register(Commands.literal("bal").executes(ctx -> showBalance(ctx.getSource())));
-        dispatcher.register(Commands.literal("money").executes(ctx -> showBalance(ctx.getSource())));
+        dispatcher.register(Commands.literal("bal")
+                .requires(src -> Permissions.check(src, Permissions.BAL, 0))
+                .executes(ctx -> showBalance(ctx.getSource())));
+        dispatcher.register(Commands.literal("money")
+                .requires(src -> Permissions.check(src, Permissions.BAL, 0))
+                .executes(ctx -> showBalance(ctx.getSource())));
 
         // /bal top
         dispatcher.register(Commands.literal("bal")
+                .requires(src -> Permissions.check(src, Permissions.BAL, 0))
                 .then(Commands.literal("top").executes(ctx -> showBalTop(ctx.getSource()))));
 
         // /pay <player> <amount>
         dispatcher.register(Commands.literal("pay")
+                .requires(src -> Permissions.check(src, Permissions.PAY, 0))
                 .then(Commands.argument("target", StringArgumentType.string())
                         .suggests(ONLINE_PLAYERS)
                         .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0.01d))
@@ -65,13 +73,14 @@ public final class EconomyCommands {
 
         // /shop
         dispatcher.register(Commands.literal("shop")
+                .requires(src -> Permissions.check(src, Permissions.SHOP, 0))
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     ShopOpener.open(player);
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.literal("reload")
-                        .requires(src -> src.hasPermission(2)) // op-only
+                        .requires(src -> Permissions.check(src, Permissions.RELOAD, Permissions.OP_LEVEL))
                         .executes(ctx -> {
                             ShopItemManager.reload();
                             ctx.getSource().sendSuccess(() -> Messages.success("Shop config reloaded."), true);
@@ -80,6 +89,7 @@ public final class EconomyCommands {
 
         // /sell hand | inv
         dispatcher.register(Commands.literal("sell")
+                .requires(src -> Permissions.check(src, Permissions.SELL, 0))
                 .then(Commands.literal("hand").executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     return SellCommand.sellHand(player);
@@ -89,9 +99,9 @@ public final class EconomyCommands {
                     return SellCommand.sellInventory(player);
                 })));
 
-        // /sellwand give — op-only, gives a sell wand to the player
+        // /sellwand give — admin-gated, gives a sell wand to the player
         dispatcher.register(Commands.literal("sellwand")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> Permissions.check(src, Permissions.SELLWAND, Permissions.OP_LEVEL))
                 .then(Commands.literal("give")
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
@@ -99,6 +109,160 @@ public final class EconomyCommands {
                             ctx.getSource().sendSuccess(() -> Messages.success("Given a Sell Wand."), false);
                             return Command.SINGLE_SUCCESS;
                         })));
+
+        // /ah  (aliases: /auction, /auctionhouse)
+        //   /ah                        — open the auction house GUI
+        //   /ah sell <price>           — list the held stack for that total price
+        //   /ah sell <price> <amount>  — list <amount> of the held item (gathered
+        //                                from the inventory), for that total price
+        var ah = dispatcher.register(Commands.literal("ah")
+                .requires(src -> Permissions.check(src, Permissions.AH, 0))
+                .executes(ctx -> openAuctionHouse(ctx.getSource()))
+                .then(Commands.literal("sell")
+                        .then(Commands.argument("price", DoubleArgumentType.doubleArg(0.01d))
+                                .executes(ctx -> {
+                                    long price = Money.fromDouble(DoubleArgumentType.getDouble(ctx, "price"));
+                                    // No amount given: list exactly the held stack.
+                                    return listHeldItem(ctx.getSource(), price, -1);
+                                })
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                        .executes(ctx -> {
+                                            long price = Money.fromDouble(DoubleArgumentType.getDouble(ctx, "price"));
+                                            int amount = IntegerArgumentType.getInteger(ctx, "amount");
+                                            return listHeldItem(ctx.getSource(), price, amount);
+                                        })))));
+        dispatcher.register(Commands.literal("auction")
+                .requires(src -> Permissions.check(src, Permissions.AH, 0))
+                .redirect(ah));
+        dispatcher.register(Commands.literal("auctionhouse")
+                .requires(src -> Permissions.check(src, Permissions.AH, 0))
+                .redirect(ah));
+    }
+
+    // Auction house commands
+
+    private static int openAuctionHouse(CommandSourceStack src) throws CommandSyntaxException {
+        if (!Config.ENABLE_AUCTION_HOUSE.get()) {
+            src.sendFailure(Messages.error("The auction house is disabled on this server."));
+            return 0;
+        }
+        ServerPlayer player = src.getPlayerOrException();
+        AuctionHouseOpener.open(player);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * Lists items of the held type on the auction house.
+     *
+     * @param requestedAmount the number to list, gathered from across the
+     *        inventory; -1 means "just the held stack". Clamped to what the player
+     *        actually has and to the configured per-listing ceiling.
+     */
+    private static int listHeldItem(CommandSourceStack src, long price, int requestedAmount)
+            throws CommandSyntaxException {
+        if (!Config.ENABLE_AUCTION_HOUSE.get()) {
+            src.sendFailure(Messages.error("The auction house is disabled on this server."));
+            return 0;
+        }
+        ServerPlayer player = src.getPlayerOrException();
+
+        // Refuse before touching the inventory if they're already at their cap, so
+        // a full-up player never has items pulled out only to be told "no".
+        if (!AuctionHouseManager.canList(player.getUUID())) {
+            src.sendFailure(Messages.error(
+                    "You already have the maximum of " + Config.MAX_AUCTION_QUANTITY.get()
+                            + " active listings."));
+            return 0;
+        }
+
+        ItemStack held = player.getMainHandItem();
+        if (held.isEmpty()) {
+            src.sendFailure(Messages.error("Hold the item you want to list in your main hand."));
+            return 0;
+        }
+
+        // The held stack fixes the item type (and its components). "just the held
+        // stack" lists exactly what's in hand; an explicit amount gathers matching
+        // items from the whole inventory.
+        int owned = countMatching(player, held);
+        int ceiling = Config.MAX_AUCTION_LISTING_SIZE.get();
+        int amount = requestedAmount < 0
+                ? held.getCount()
+                : Math.min(requestedAmount, owned);
+        amount = Math.min(amount, ceiling);
+
+        if (amount <= 0) {
+            src.sendFailure(Messages.error("You don't have any of that item to list."));
+            return 0;
+        }
+        if (requestedAmount > ceiling) {
+            src.sendFailure(Messages.error("You can only list " + ceiling + " items at once."));
+            return 0;
+        }
+
+        // Snapshot the item type before removing anything, then take exactly the
+        // amount into escrow. Items are only ever in one place: removed here,
+        // owned by the listing from now on.
+        ItemStack template = held.copy();
+        template.setCount(1);
+        removeMatching(player, held, amount);
+
+        int listed = amount;
+        AuctionHouseManager.ListResult result =
+                AuctionHouseManager.list(player.getUUID(), player.getName().getString(), template, listed, price);
+
+        // list() re-checks the cap authoritatively; if it somehow refuses now, hand
+        // the items back rather than deleting them.
+        if (result != AuctionHouseManager.ListResult.SUCCESS) {
+            giveBack(player, template, listed);
+            src.sendFailure(Messages.error(
+                    "You already have the maximum of " + Config.MAX_AUCTION_QUANTITY.get()
+                            + " active listings."));
+            return 0;
+        }
+
+        src.sendSuccess(() -> Messages.body(
+                "Listed " + Messages.item(listed + "x " + template.getHoverName().getString())
+                        + " for " + Messages.money(price) + "."), false);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 0.5f, 1.2f);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /** Total count of items matching the template (same item and components). */
+    private static int countMatching(ServerPlayer player, ItemStack template) {
+        int count = 0;
+        for (ItemStack stack : player.getInventory().items) {
+            if (ItemStack.isSameItemSameComponents(stack, template)) count += stack.getCount();
+        }
+        return count;
+    }
+
+    /** Removes up to {@code amount} matching items from the inventory. */
+    private static void removeMatching(ServerPlayer player, ItemStack template, int amount) {
+        int remaining = amount;
+        for (ItemStack stack : player.getInventory().items) {
+            if (remaining <= 0) break;
+            if (ItemStack.isSameItemSameComponents(stack, template)) {
+                int take = Math.min(stack.getCount(), remaining);
+                stack.shrink(take);
+                remaining -= take;
+            }
+        }
+    }
+
+    /** Returns items to the player, split into natural stacks, dropping any overflow. */
+    private static void giveBack(ServerPlayer player, ItemStack template, int amount) {
+        int remaining = amount;
+        int maxStack = template.getMaxStackSize();
+        while (remaining > 0) {
+            int give = Math.min(remaining, maxStack);
+            ItemStack chunk = template.copy();
+            chunk.setCount(give);
+            remaining -= give;
+            if (!player.getInventory().add(chunk) || !chunk.isEmpty()) {
+                player.drop(chunk, false);
+            }
+        }
     }
 
     // Command implementations

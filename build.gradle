@@ -41,6 +41,24 @@ dependencies {
 	// Fabric API. Required — the mod uses Fabric's event callbacks and the
 	// Transfer API (item storage) for the sell wand.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// LuckPerms-compatible permissions. This is the Fabric counterpart to
+	// NeoForge's PermissionAPI: LuckPerms (and other permission mods) hook into it
+	// automatically, and it falls back to vanilla OP levels when none is installed.
+	// Bundled into the jar via include() so servers don't have to install it
+	// separately. Coordinates on Maven Central (added by Loom automatically).
+	//
+	// The published POM imports a fabric-api BOM (from a newer, 1.21.6 Fabric API)
+	// in its dependencyManagement, which otherwise force-upgrades every individual
+	// fabric-api module (fabric-entity-events-v1, fabric-screen-api-v1, …) to their
+	// 1.21.6 versions.
+	// Those mixins then fail to apply on 1.21.1.
+	modImplementation("me.lucko:fabric-permissions-api:${project.fabric_permissions_version}") {
+		exclude group: "net.fabricmc.fabric-api"
+	}
+	include("me.lucko:fabric-permissions-api:${project.fabric_permissions_version}") {
+		exclude group: "net.fabricmc.fabric-api"
+	}
 }
 
 processResources {

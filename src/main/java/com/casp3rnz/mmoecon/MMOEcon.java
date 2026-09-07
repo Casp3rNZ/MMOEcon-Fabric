@@ -40,10 +40,14 @@ public class MMOEcon implements ModInitializer {
             if (Config.ENABLE_GUI_SHOP.get()) {
                 ShopItemManager.load();
             }
+            AuctionHouseManager.load(server);
             LOGGER.info("MMOEcon server starting — config loaded.");
         });
 
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> PlayerBalanceManager.saveIfDirty());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            PlayerBalanceManager.saveIfDirty();
+            AuctionHouseManager.saveIfDirty();
+        });
 
         // Clear the cached server reference once it is fully stopped.
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> ModServer.set(null));
@@ -56,6 +60,7 @@ public class MMOEcon implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             PlaytimeRewardListener.tick(server);
             PlayerBalanceManager.flushTick(server);
+            AuctionHouseManager.flushTick(server);
         });
 
         // ── Commands ────────────────────────────────────────────────────────────
