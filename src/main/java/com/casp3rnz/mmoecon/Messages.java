@@ -17,7 +17,6 @@ import net.minecraft.network.chat.Component;
 public final class Messages {
 
     private static final String PREFIX = "§8[§6MMO Econ§8]§r ";
-
     // Colours
     private static final String SUCCESS   = "§a";
     private static final String ERROR     = "§c";
