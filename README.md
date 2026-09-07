@@ -21,6 +21,7 @@ It is completely server-side and does NOT need to be installed on any clients in
 - [x] A balance Leaderboard.
 - [x] Sell wands.
 - [x] Playtime balance rewards.
+- [x] Player-to-player Auction House. 
 
 ### Commands
 - /bal, /money - Displays the player's balance.
@@ -31,6 +32,8 @@ It is completely server-side and does NOT need to be installed on any clients in
 - /sell inv - Sells every item in your inventory that is listed as a valid sellable in the GUI shop.
 - /sellwand give - (OP ONLY) Gives the player a sell wand.
 - /shop reload - Reloads MMOShop.json
+- /ah - Open the Auction House GUI.
+- /ah sell (price) [quantity] - List an item on the Auction House.
 
 ### Customising the Shop
 The GUI shop is dynamically populated by /config/mmoecon/MMOShop.json.
