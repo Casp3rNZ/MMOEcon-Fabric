@@ -185,8 +185,9 @@ public final class SellWandListener {
                 ItemVariant variant = view.getResource();
                 if (variant.isBlank()) continue;
 
-                String itemId = BuiltInRegistries.ITEM.getKey(variant.getItem()).toString();
-                ShopItemManager.ShopItem shopItem = ShopItemManager.findItem(itemId);
+                ShopItemManager.ShopItem shopItem = SellWand.isWand(variant.toStack())
+                        ? ShopItemManager.findSpecial("sell_wand")
+                        : ShopItemManager.findItem(BuiltInRegistries.ITEM.getKey(variant.getItem()).toString());
                 if (shopItem == null || !shopItem.canSell()) continue;
 
                 long available = view.getAmount();

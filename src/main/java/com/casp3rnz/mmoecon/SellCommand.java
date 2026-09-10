@@ -20,8 +20,9 @@ public final class SellCommand {
             return 0;
         }
 
-        String itemId = BuiltInRegistries.ITEM.getKey(held.getItem()).toString();
-        ShopItemManager.ShopItem shopItem = ShopItemManager.findItem(itemId);
+        ShopItemManager.ShopItem shopItem = SellWand.isWand(held)
+                ? ShopItemManager.findSpecial("sell_wand")
+                : ShopItemManager.findItem(BuiltInRegistries.ITEM.getKey(held.getItem()).toString());
 
         if (shopItem == null || !shopItem.canSell()) {
             player.sendSystemMessage(Messages.error(
@@ -57,8 +58,9 @@ public final class SellCommand {
             // Skip armour and offhand slots
             if (isArmorOrOffhand(player, stack)) continue;
 
-            String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-            ShopItemManager.ShopItem shopItem = ShopItemManager.findItem(itemId);
+            ShopItemManager.ShopItem shopItem = SellWand.isWand(stack)
+                    ? ShopItemManager.findSpecial("sell_wand")
+                    : ShopItemManager.findItem(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
             if (shopItem == null || !shopItem.canSell()) continue;
 
             int qty      = stack.getCount();

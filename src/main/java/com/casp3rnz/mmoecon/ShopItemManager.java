@@ -898,6 +898,19 @@ public class ShopItemManager {
         return null;
     }
 
+    /**
+     * Returns the first ShopItem with the special key, or null if none.
+     * Used to resolve items by their role rather than registry ID,
+     * since special items share an underlying vanilla item (the sell wand is a blaze rod)
+     * and must not be priced off that underlying item's entry.
+     */
+    public static ShopItem findSpecial(String special) {
+        for (ShopItem item : getAllItems()) {
+            if (special.equals(item.special)) return item;
+        }
+        return null;
+    }
+
 
     // Data Classes
     /** Prices are in cents (see Money); null means the item can't be traded that way. */
