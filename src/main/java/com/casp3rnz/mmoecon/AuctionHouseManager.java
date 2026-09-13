@@ -6,6 +6,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -119,7 +121,30 @@ public final class AuctionHouseManager {
         dirty = true;
         TransactionLogger.log(sellerName + " listed " + quantity + "x "
                 + listing.displayName().getString() + " for $" + Money.format(price));
+
+        announceListing(sellerName, listing.unitStack(), quantity, price);
         return ListResult.SUCCESS;
+    }
+
+    /**
+     * Broadcasts a new listing to every online player. The item name is a
+     * hoverable label carrying the listed stack's full tooltip (enchantments,
+     * custom name, lore, durability).
+     */
+    private static void announceListing(String sellerName, ItemStack unitStack, int quantity, long price) {
+        MinecraftServer server = ModServer.get();
+        if (server == null) return;
+
+        // Built as a Component, not a §-code string:
+        // The SHOW_ITEM hover can only live on a Component, so the item name is appended as its own piece.
+        MutableComponent announcement = Messages.body(Messages.item(sellerName) + " has just listed ").copy()
+                .append(Messages.itemHover(quantity + "x " + unitStack.getHoverName().getString(), unitStack))
+                .append(Component.literal(" for sale for " + Messages.money(price)));
+        if (quantity > 1) {
+            announcement.append(Component.literal(" (" + Messages.money(price / quantity) + " each)"));
+        }
+        announcement.append(Component.literal("!"));
+        server.getPlayerList().broadcastSystemMessage(announcement, false);
     }
 
     /**

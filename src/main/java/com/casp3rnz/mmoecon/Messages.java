@@ -3,6 +3,7 @@ package com.casp3rnz.mmoecon;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Builds the mod's player-facing chat messages so they share one look.
@@ -60,6 +61,17 @@ public final class Messages {
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                         Component.literal(hover))));
+    }
+
+    /**
+     * A hoverable item label for use inside a chat sentence:
+     * The given {@code label} text, carrying a SHOW_ITEM hover that renders {@code stack}'s full vanilla
+     * tooltip (enchantments, custom name, lore, durability).
+     */
+    public static Component itemHover(String label, ItemStack stack) {
+        return Component.literal(HIGHLIGHT + label + BODY).withStyle(style -> style
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,
+                        new HoverEvent.ItemStackInfo(stack))));
     }
 
     private Messages() {}
