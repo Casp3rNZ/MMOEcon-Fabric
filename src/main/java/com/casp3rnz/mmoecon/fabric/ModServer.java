@@ -22,7 +22,7 @@ public final class ModServer {
     @Nullable
     private static volatile MinecraftServer current;
 
-    static void set(@Nullable MinecraftServer server) {
+    public static void set(@Nullable MinecraftServer server) {
         current = server;
     }
 
