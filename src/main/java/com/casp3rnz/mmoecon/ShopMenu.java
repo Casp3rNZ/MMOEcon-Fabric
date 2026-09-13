@@ -238,7 +238,7 @@ import java.util.List;
                 if (!PlayerBalanceManager.hasFunds(player.getUUID(), total)) {
                     long shortfall = total - PlayerBalanceManager.getBalance(player.getUUID());
                     player.sendSystemMessage(Messages.error(
-                            "You need $" + Money.format(shortfall) + " more for that."));
+                            "You need " + Messages.money(shortfall) + "§c more for that."));
                     return;
                 }
                 boolean special = shopItem.isSpecial();

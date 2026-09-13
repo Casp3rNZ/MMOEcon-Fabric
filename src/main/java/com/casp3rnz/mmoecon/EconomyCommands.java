@@ -37,6 +37,7 @@ import java.util.*;
  *   /shop reload    — reload shop JSON config
  *   /sell hand      — sell held item
  *   /sell inv       — sell all sellable items in inventory
+ *   /sell receipt   — open the receipt GUI for the last sale (with per-stack refund)
  *   /sellwand give - (admin only) gives user a sell wand
  */
 public final class EconomyCommands {
@@ -87,7 +88,7 @@ public final class EconomyCommands {
                             return Command.SINGLE_SUCCESS;
                         })));
 
-        // /sell hand | inv
+        // /sell hand | inv | receipt
         dispatcher.register(Commands.literal("sell")
                 .requires(src -> Permissions.check(src, Permissions.SELL, 0))
                 .then(Commands.literal("hand").executes(ctx -> {
@@ -97,6 +98,10 @@ public final class EconomyCommands {
                 .then(Commands.literal("inv").executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     return SellCommand.sellInventory(player);
+                }))
+                .then(Commands.literal("receipt").executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    return SellCommand.showReceipt(player);
                 })));
 
         // /sellwand give — admin-gated, gives a sell wand to the player
@@ -332,7 +337,7 @@ public final class EconomyCommands {
         if (!PlayerBalanceManager.transfer(sender.getUUID(), target.getUUID(), amount)) {
             long shortfall = amount - PlayerBalanceManager.getBalance(sender.getUUID());
             src.sendFailure(Messages.error(
-                    "You need $" + Money.format(shortfall) + " more to pay that."));
+                    "You need " + Messages.money(shortfall) + "§c more to pay that."));
             return 0;
         }
 

@@ -1,6 +1,8 @@
 package com.casp3rnz.mmoecon;
 
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 
 /**
  * Builds the mod's player-facing chat messages so they share one look.
@@ -50,6 +52,14 @@ public final class Messages {
     /** An item name or count, highlighted white, returning to body grey afterwards. */
     public static String item(String name) {
         return HIGHLIGHT + name + BODY;
+    }
+
+    /** A clickable chat component that runs a command when clicked, with a hover tooltip */
+    public static Component button(String label, String command, String hover) {
+        return Component.literal(INFO + label).withStyle(style -> style
+                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        Component.literal(hover))));
     }
 
     private Messages() {}

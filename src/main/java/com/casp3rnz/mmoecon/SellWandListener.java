@@ -151,9 +151,12 @@ public final class SellWandListener {
 
         PlayerBalanceManager.addBalance(player.getUUID(), actual.totalEarned);
 
+        SellReceiptStore.put(player.getUUID(), buildReceipt(actual));
+
         player.sendSystemMessage(Messages.body(
                 "Sold " + Messages.item(actual.totalItems + " items")
-                        + " for " + Messages.money(actual.totalEarned) + "."));
+                        + " for " + Messages.money(actual.totalEarned) + ".")
+                .copy().append(SellCommand.receiptButton()));
 
         TransactionLogger.log(player.getName().getString()
                 + " used sell wand at " + pending.blockPos()
@@ -185,7 +188,15 @@ public final class SellWandListener {
                 ItemVariant variant = view.getResource();
                 if (variant.isBlank()) continue;
 
-                ShopItemManager.ShopItem shopItem = SellWand.isWand(variant.toStack())
+                ItemStack representative = variant.toStack();
+                boolean isWand = SellWand.isWand(representative);
+
+                // Skip enchanted / renamed / damaged items.
+                // Only clean, full-durability stock items may be sold.
+                // The wand is exempt (it's priced via "sell_wand").
+                if (!SellFilter.isSellable(representative, isWand)) continue;
+
+                ShopItemManager.ShopItem shopItem = isWand
                         ? ShopItemManager.findSpecial("sell_wand")
                         : ShopItemManager.findItem(BuiltInRegistries.ITEM.getKey(variant.getItem()).toString());
                 if (shopItem == null || !shopItem.canSell()) continue;
@@ -324,6 +335,25 @@ public final class SellWandListener {
         }
 
         return new SaleResult(earned, removed, actual);
+    }
+
+    /**
+     * Turns the executed sale's removed resources into a receipt. Each SlotSale
+     * carries the ItemVariant and the exact amount that left the container, so the
+     * real stacks (with components — enchantments, custom names, damage and all)
+     * can be reconstructed for the receipt GUI.
+     * variant.toStack() yields a single-count stack; the count is set explicitly
+     * because it may exceed a natural stack size and the receipt builder re-splits
+     * merged totals into natural stacks itself.
+     */
+    private static SellReceipt buildReceipt(SaleResult sale) {
+        List<SellReceiptBuilder.Entry> entries = new ArrayList<>();
+        for (SlotSale slot : sale.slots()) {
+            ItemStack stack = slot.variant().toStack();
+            stack.setCount(slot.quantity());
+            entries.add(new SellReceiptBuilder.Entry(stack, slot.unitPrice()));
+        }
+        return SellReceiptBuilder.build(entries);
     }
 
     // Internal records
