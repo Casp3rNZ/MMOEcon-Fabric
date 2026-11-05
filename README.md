@@ -27,6 +27,11 @@ It is completely server-side and does NOT need to be installed on any clients in
 - /bal, /money - Displays the player's balance.
 - /pay (playername) [amount] - Pays money to player from your balance.
 - /bal top - Displays a list of the server's richest players.
+- /bal get <username> - (ADMIN ONLY) Displays an account's exact balance.
+- /bal set <username> <amount> - (ADMIN ONLY) Sets an exact balance.
+- /bal add <username> <amount> - (ADMIN ONLY) Adds money to an account.
+- /bal subtract <username> <amount> - (ADMIN ONLY) Subtracts money if the account has enough funds.
+- /bal admin - (ADMIN ONLY) Opens the server-side balance administration GUI.
 - /shop - Opens the GUI shop.
 - /sell hand - Sells the currently held item, if its listed a valid sellable in the GUI shop.
 - /sell inv - Sells every item in your inventory that is listed as a valid sellable in the GUI shop.
@@ -34,6 +39,13 @@ It is completely server-side and does NOT need to be installed on any clients in
 - /shop reload - Reloads MMOShop.json
 - /ah - Open the Auction House GUI.
 - /ah sell (price) [quantity] - List an item on the Auction House.
+
+### Administrator Balance Management
+
+Balance administration requires `mmoecon.admin.balance`, which defaults to OP level 2.
+Players also need `mmoecon.command.bal` to access the `/bal` command tree and GUI.
+Permission mods can grant or deny these nodes through fabric-permissions-api.
+Console, command blocks, and functions use the vanilla level 2 permission check.
 
 ### Customising the Shop
 The GUI shop is dynamically populated by /config/mmoecon/MMOShop.json.

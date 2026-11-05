@@ -23,6 +23,7 @@ import net.minecraft.commands.CommandSourceStack;
  *   mmoecon.command.ah        — /ah, /auction, /auctionhouse (default: everyone)
  *   mmoecon.admin.reload      — /shop reload                 (default: OP, level 2)
  *   mmoecon.admin.sellwand    — /sellwand give               (default: OP, level 2)
+ *   mmoecon.admin.balance     — /bal get/set/add/subtract/admin (default: OP, level 2)
  * </pre>
  */
 public final class Permissions {
@@ -40,6 +41,7 @@ public final class Permissions {
     // Admin commands: OP by default.
     public static final String RELOAD   = node("admin.reload");
     public static final String SELLWAND = node("admin.sellwand");
+    public static final String BALANCE_ADMIN = node("admin.balance");
 
     /**
      * Predicate for Brigadier's {@code .requires(...)}. Resolves the node through

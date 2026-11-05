@@ -92,6 +92,8 @@ public final class AuctionHouseMenu extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        // Only PICKUP is a real press. stops PICKUP_ALL triggering dupe events.
+        if (clickType != ClickType.PICKUP) return;
         // Only clicks in the top (menu) container matter; ignore player-inventory clicks.
         if (slotId < 0 || slotId >= menuInventory.getContainerSize()) return;
         playClickSound();

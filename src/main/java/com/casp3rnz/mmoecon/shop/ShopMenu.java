@@ -6,6 +6,7 @@ import com.casp3rnz.mmoecon.core.Config;
 import com.casp3rnz.mmoecon.core.Messages;
 import com.casp3rnz.mmoecon.core.Money;
 import com.casp3rnz.mmoecon.core.TextStyleParser;
+import com.casp3rnz.mmoecon.sell.SellFilter;
 import com.casp3rnz.mmoecon.sell.SellWand;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -111,6 +112,8 @@ import java.util.List;
 
         @Override
         public void clicked(int slotId, int button, ClickType clickType, Player player) {
+            // Only PICKUP is a real press. stops PICKUP_ALL triggering dupe events.
+            if (clickType != ClickType.PICKUP) return;
             // Block all item movement — we only care about the click position
             if (slotId < 0 || slotId >= shopInventory.getContainerSize()) return;
 
@@ -338,7 +341,7 @@ import java.util.List;
         private int countItemInInventory(Item item) {
             int count = 0;
             for (ItemStack stack : player.getInventory().items) {
-                if (stack.is(item)) count += stack.getCount();
+                if (stack.is(item) && SellFilter.isSellable(stack, false)) count += stack.getCount();
             }
             return count;
         }
@@ -346,7 +349,7 @@ import java.util.List;
         private void removeItemsFromInventory(Item item, int qty) {
             int remaining = qty;
             for (ItemStack stack : player.getInventory().items) {
-                if (stack.is(item) && remaining > 0) {
+                if (stack.is(item) && SellFilter.isSellable(stack, false) && remaining > 0) {
                     int take = Math.min(stack.getCount(), remaining);
                     stack.shrink(take);
                     remaining -= take;

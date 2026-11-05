@@ -109,6 +109,8 @@ public final class SellReceiptMenu extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        // Only PICKUP is a real press. stops PICKUP_ALL triggering dupe events.
+        if (clickType != ClickType.PICKUP) return;
         // Only react to clicks in the display area; ignore the player's own inventory.
         if (slotId < 0 || slotId >= display.getContainerSize()) return;
 

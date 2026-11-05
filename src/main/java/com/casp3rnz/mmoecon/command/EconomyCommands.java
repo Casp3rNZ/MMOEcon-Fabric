@@ -55,6 +55,8 @@ public final class EconomyCommands {
                     ctx.getSource().getServer().getPlayerNames(), builder);
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        BalanceAdminCommands.register(dispatcher);
+
         // /bal and /money
         dispatcher.register(Commands.literal("bal")
                 .requires(src -> Permissions.check(src, Permissions.BAL, 0))

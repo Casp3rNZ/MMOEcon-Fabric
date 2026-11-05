@@ -16,6 +16,19 @@ public final class Money {
     public static final long ZERO = 0L;
     private static final int CENTS_PER_UNIT = 100;
 
+    /** Exact administrator input: plain dollars with at most two decimal places. */
+    public static long parseExact(String amount) {
+        if (!amount.matches("[0-9]+(?:\\.[0-9]{1,2})?")) {
+            throw new IllegalArgumentException("Use a non-negative amount with at most two decimal places.");
+        }
+        return new BigDecimal(amount).movePointRight(2).longValueExact();
+    }
+
+    /** Full dollar amount, including cents, without abbreviations or a currency symbol. */
+    public static String formatExact(long cents) {
+        return BigDecimal.valueOf(cents, 2).toPlainString();
+    }
+
     /**
      * Converts a decimal currency amount to cents, half-up.
      * Uses BigDecimal rather than Math.round(value * 100) because the latter
